@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html ng-app="crudApp">
+
+<head>
+  <title>AngularJS CRUD User</title>
+  <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.7.9/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.6/angular-animate.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.6/angular-aria.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.6/angular-messages.min.js"></script>
+
+  <!-- Angular Material Library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
+
+  <script>
+    var app = angular.module('crudApp', ['ngMaterial']);
+
+    app.controller('userController', function($scope, $http) {
+      $scope.users = [];
+      $scope.newUser = {};
+      $scope.editUser = {};
+      $scope.urlAPI = "https://64a58fc300c3559aa9bfe8cd.mockapi.io/users"
+
+      // Fetch all users
+      $http.get($scope.urlAPI)
+        .then(function(response) {
+          $scope.users = response.data;
+        });
+
+      // Add a new user
+      $scope.addUser = function() {
+        $http.post($scope.urlAPI, $scope.newUser)
+          .then(function(response) {
+            $scope.users.push(response.data);
+            $scope.newUser = {};
+          });
+      };
+
+      // Delete a user
+      $scope.deleteUser = function(user) {
+        $http.delete($scope.urlAPI + '/' + user.id)
+          .then(function(response) {
+            var index = $scope.users.indexOf(user);
+            $scope.users.splice(index, 1);
+          });
+      };
+
+      // Edit a user
+      $scope.editUserModal = function(user) {
+        $scope.editUser = angular.copy(user);
+      };
+
+      $scope.updateUser = function() {
+        $http.put('/user/' + $scope.editUser.id, $scope.editUser)
+          .then(function(response) {
+            var index = $scope.users.findIndex(function(user) {
+              return user.id === $scope.editUser.id;
+            });
+            $scope.users[index] = response.data;
+            $scope.editUser = {};
+          });
+      };
+    });
+  </script>
+</head>
+
+<body>
+  <div ng-controller="userController">
+    <md-content>
+      <h2>Users</h2>
+
+    <!-- Add User -->
+    <form ng-submit="addUser()">
+      <md-input-container>
+        <input type="text" ng-model="newUser.firstName" placeholder="First name" required>
+      </md-input-container>
+      <md-input-container>
+        <input type="text" ng-model="newUser.lastName" placeholder="Last Name" required>
+      </md-input-container>
+      <md-input-container>
+        <input type="email" ng-model="newUser.email" placeholder="Email" required>
+      </md-input-container>
+      <md-button class="md-raised md-primary" type="submit">Add User</md-button>
+    </form>
+
+    <!-- Edit User Modal -->
+    <div>
+      <h3>Edit User</h3>
+      <form ng-submit="updateUser()">
+        <md-input-container>
+          <input type="text" ng-model="editUser.firstName" placeholder="First name" required>
+        </md-input-container>
+        <md-input-container>
+          <input type="text" ng-model="editUser.lastName" placeholder="Last name" required>
+        </md-input-container>
+        <md-input-container>
+          <input type="email" ng-model="editUser.email" placeholder="Email" required>
+        </md-input-container>
+        <md-button class="md-raised md-primary" type="submit">Update</md-button>
+      </form>
+    </div>
+
+    <!-- List Users -->
+      <ul>
+        <li ng-repeat="user in users">
+          {{ user.firstName }} {{ user.lastName }} ({{ user.email }})
+          <md-button class="md-raised md-warn" ng-click="deleteUser(user)">Delete</md-button>
+          <md-button class="md-raised md-primary" ng-click="editUserModal(user)">Edit</md-button>
+        </li>
+      </ul>
+    </md-content>
+  </div>
+</body>
+
+</html>
